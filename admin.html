@@ -74,7 +74,7 @@ button{border:0;border-radius:13px;padding:12px 17px;font-weight:800;cursor:poin
       </div>
       
       <div style="margin-bottom:10px;font-weight:700;font-size:14px;color:#666;">
-        <span id="otpStatus">✅ Ready - Send OTP Result to User</span>
+        <span id="otpStatus">✅ Ready</span>
       </div>
       
       <div class="otp-actions">
@@ -89,7 +89,7 @@ button{border:0;border-radius:13px;padding:12px 17px;font-weight:800;cursor:poin
 
 <script>
 const KEY = "withdrawal_demo_activity_v1";
-let currentOTP = null;
+let lastOtp = null;
 
 function getData() {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e) { return []; }
@@ -126,9 +126,12 @@ function render() {
   var withdrawRows = document.getElementById('withdrawRows');
   if (withdrawals.length) {
     withdrawRows.innerHTML = withdrawals.map(function(x) {
-      var statusClass = x.verified ? 'style="background:#28a745;color:#fff;"' : '';
-      var statusText = x.verified ? '✅ Verified' : '⏳ Pending';
-      if (x.otpFailed) {
+      var statusClass = '';
+      var statusText = '⏳ Pending';
+      if (x.verified === true) {
+        statusClass = 'style="background:#28a745;color:#fff;"';
+        statusText = '✅ Verified';
+      } else if (x.otpFailed === true) {
         statusClass = 'style="background:#dc3545;color:#fff;"';
         statusText = '❌ Failed';
       }
@@ -140,11 +143,28 @@ function render() {
   
   // Check if user entered OTP
   var userOtp = localStorage.getItem('user_entered_otp');
-  if (userOtp) {
+  if (userOtp && userOtp !== lastOtp) {
+    lastOtp = userOtp;
     document.getElementById('userOtpDisplay').style.display = 'flex';
     document.getElementById('userOtpValue').textContent = userOtp;
     document.getElementById('userOtpStatus').textContent = '⏳ Waiting for admin action...';
     document.getElementById('userOtpStatus').style.color = '#ff9800';
+    document.getElementById('otpStatus').textContent = '📨 OTP received from user! Take action.';
+    document.getElementById('otpStatus').style.color = '#ff9800';
+  }
+  
+  // Check result status
+  var result = localStorage.getItem('otp_result');
+  if (result === 'failed') {
+    document.getElementById('otpStatus').textContent = '❌ OTP Failed! User notified.';
+    document.getElementById('otpStatus').style.color = '#dc3545';
+    document.getElementById('userOtpStatus').textContent = '❌ OTP Failed!';
+    document.getElementById('userOtpStatus').style.color = '#dc3545';
+  } else if (result === 'success') {
+    document.getElementById('otpStatus').textContent = '✅ OTP Successful! User notified.';
+    document.getElementById('otpStatus').style.color = '#28a745';
+    document.getElementById('userOtpStatus').textContent = '✅ OTP Successful!';
+    document.getElementById('userOtpStatus').style.color = '#28a745';
   }
   
   console.log("✅ Admin Panel Rendered. Total:", all.length);
@@ -154,6 +174,8 @@ function clearActivity() {
   if (confirm("Clear all demo activity from this browser?")) {
     localStorage.removeItem(KEY);
     localStorage.removeItem('user_entered_otp');
+    localStorage.removeItem('otp_result');
+    localStorage.removeItem('withdrawal_timer_cancel');
     render();
   }
 }
@@ -227,6 +249,7 @@ function resetOTP() {
   localStorage.removeItem('user_entered_otp');
   localStorage.removeItem('otp_result');
   localStorage.removeItem('withdrawal_timer_cancel');
+  lastOtp = null;
   
   document.getElementById('userOtpDisplay').style.display = 'none';
   document.getElementById('userOtpValue').textContent = '------';
@@ -236,37 +259,8 @@ function resetOTP() {
   document.getElementById('otpStatus').style.color = '#28a745';
   
   console.log("🔄 OTP Reset!");
+  render();
 }
-
-// Check for user OTP every second
-setInterval(function() {
-  var userOtp = localStorage.getItem('user_entered_otp');
-  if (userOtp) {
-    document.getElementById('userOtpDisplay').style.display = 'flex';
-    document.getElementById('userOtpValue').textContent = userOtp;
-    var result = localStorage.getItem('otp_result');
-    if (result === 'failed') {
-      document.getElementById('userOtpStatus').textContent = '❌ OTP Failed!';
-      document.getElementById('userOtpStatus').style.color = '#dc3545';
-    } else if (result === 'success') {
-      document.getElementById('userOtpStatus').textContent = '✅ OTP Successful!';
-      document.getElementById('userOtpStatus').style.color = '#28a745';
-    } else {
-      document.getElementById('userOtpStatus').textContent = '⏳ Waiting for admin action...';
-      document.getElementById('userOtpStatus').style.color = '#ff9800';
-    }
-  }
-  
-  // Check if OTP result changed
-  var result = localStorage.getItem('otp_result');
-  if (result === 'failed') {
-    document.getElementById('otpStatus').textContent = '❌ OTP Failed! User notified.';
-    document.getElementById('otpStatus').style.color = '#dc3545';
-  } else if (result === 'success') {
-    document.getElementById('otpStatus').textContent = '✅ OTP Successful! User notified.';
-    document.getElementById('otpStatus').style.color = '#28a745';
-  }
-}, 1000);
 
 render();
 setInterval(render, 2000);
